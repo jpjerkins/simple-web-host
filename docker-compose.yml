@@ -1,0 +1,25 @@
+services:
+  static:
+    container_name: static
+    build: .
+    user: "65534:65534"  # nobody:nogroup
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - /mnt/data/static/www:/var/www:ro
+      - /mnt/data/static/logs:/var/log/app:rw
+    networks:
+      - static
+    restart: unless-stopped
+    environment:
+      - TZ=America/Chicago
+      - LOG_DIR=/var/log/app
+      - WWW_ROOT=/var/www
+      - LOG_RETENTION_HOURS=168
+
+networks:
+  static:
+    name: static

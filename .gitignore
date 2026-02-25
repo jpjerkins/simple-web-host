@@ -1,0 +1,52 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+server
+static-web-host
+*.test
+*.out
+vendor/
+
+# Go workspace files
+go.work
+go.work.sum
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment / Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs (should never be committed)
+*.log
+logs/
+
+# Test files and data (local testing only)
+test-data/
+tmp/
+temp/
+
+# Docker
+.dockerignore
+
+# Build output
+dist/
+build/
