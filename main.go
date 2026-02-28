@@ -125,7 +125,7 @@ func main() {
 func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	path := r.URL.Path
-	
+
 	// Wrap response writer to capture status
 	wrapped := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
 
@@ -146,6 +146,12 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	// Only allow GET and HEAD
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		http.Error(wrapped, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Handle root path - show directory listing
+	if path == "/" {
+		s.serveDirectoryListing(wrapped, r)
 		return
 	}
 
@@ -185,6 +191,51 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Serve the file
 	http.ServeFile(wrapped, r, cleanPath)
+}
+
+func (s *Server) serveDirectoryListing(w http.ResponseWriter, r *http.Request) {
+	entries, err := os.ReadDir(s.wwwRoot)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Build HTML response
+	html := `<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Directory Listing</title>
+	<style>
+		body { font-family: sans-serif; max-width: 800px; margin: 50px auto; padding: 0 20px; }
+		h1 { color: #333; }
+		ul { list-style: none; padding: 0; }
+		li { padding: 8px; border-bottom: 1px solid #eee; }
+		a { text-decoration: none; color: #0066cc; }
+		a:hover { text-decoration: underline; }
+	</style>
+</head>
+<body>
+	<h1>Files</h1>
+	<ul>
+`
+
+	// Add files (skip directories)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		html += fmt.Sprintf("\t\t<li><a href=\"/%s\">%s</a></li>\n", name, name)
+	}
+
+	html += `	</ul>
+</body>
+</html>`
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprint(w, html)
 }
 
 func (s *Server) sanitizePath(p string) (string, error) {
